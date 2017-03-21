@@ -39,6 +39,7 @@ const Context = {
   about: '<http://schema.org/about>',
   citation: '<http://schema.org/citation>',
   CreativeWork: '<http://schema.org/CreativeWork>',
+  VideoObject: '<http://schema.org/VideoObject>',
   Movie: '<http://schema.org/Movie>',
   Person: '<http://schema.org/Person>',
   ReadAction: '<http://schema.org/ReadAction>',
@@ -54,80 +55,94 @@ const Context = {
     FieldOfStudy: '<http://academic.microsoft.com/FieldOfStudy>',
     parentFieldOfStudy: '<http://academic.microsoft.com/parentFieldOfStudy>',
     childFieldOfStudy: '<http://academic.microsoft.com/childFieldOfStudy>'
+  },
+
+
+  Knowledge: {
+    Topic: '<https://knowledge.express/Topic>',
+    next: '<https://knowledge.express/next>',
+    previous: '<https://knowledge.express/previous>',
+    child: '<https://knowledge.express/child>',
+    parent: '<https://knowledge.express/parent>',
+    resource: '<https://knowledge.express/resource>',
+
+    Resource: '<https://knowledge.express/Resource>',
+    topic: '<https://knowledge.express/topic>',
+    entity: '<https://knowledge.express/entity>',
+
+    Entity: '<https://knowledge.express/Entity>',
   }
 }
 
 
 global['topictree'] = topictree;
-
-let limit = 10; // Infinity;
 let i = 0;
 
-function mapExercise(exercise) {
-
-  let { kind, title, license_url } = exercise;
-
-  return { kind, title, license_url };
-}
-
-function mapVideo(video) {
-  i++;
-  let { kind, title, license_url } = video;
-
-  return video;
-  // return { kind, title, license_url };
-}
-
-function mapTopic(topic) {
-  let { title, tags } = topic;
-  // return topic;
-  // return tags ? tags.join(', ') : undefined;
-  return topic.kind;
-  // return topic.license_url;
-}
-
-function reduceChildData(memo, childData) {
-  if (i >= limit) return memo;
-  let { kind } = childData;
-
-  if (kind === 'Exercise') memo[`exercise-${i}`] = mapExercise(childData);
-
-  return memo;
-}
-
-function reduceChildren(memo, child) {
-  if (i > limit) return memo;
-  let { kind, relative_url, children, child_data } = child;
-
-  // if (kind === 'Topic') memo[relative_url] = mapTopic(child);
-  if (kind === 'Video') memo[relative_url] = mapVideo(child);
-  // if (kind === 'Exercise') memo[relative_url] = mapExercise(child);
-  if (children) children.reduce(reduceChildren, memo);
-  if (child_data) child_data.reduce(reduceChildData, memo);
-
-  return memo;
-}
-
-const results = topictree.children.reduce(reduceChildren, {});
-
-const quads = Object.keys(results).reduce((memo, key) => {
-  const id = `<https://www.youtube.com/watch?v=${results[key].youtube_id}>`;
-  return [
-    ...memo,
-    { subject: id, predicate: Context.type, object: Context.Movie},
-  ]
-}, []);
-
-quads.reduce((memo, quad) => {
-  return memo.then(() => {
-    return queue.add(() => {
-      console.log('hello!');
-      return send({ type: 'write', quad });
-    });
-  });
-}, Promise.resolve()).then(() => {
-  console.log('done!');
+const queuedSend = quad => queue.add(() => {
+  console.log(i++);
+  const action = { type: 'write', quad };
+  return send(action);
 });
 
 
-// console.log(quads);
+function doThing(memo, thing) {
+  const iri = irify(thing.ka_url);
+
+  queuedSend({ subject: iri, predicate: Context.type, object: Context.Knowledge.Topic });
+
+  if (memo.parent) {
+    queuedSend({ subject: iri, predicate: Context.Knowledge.parent, object: memo.parent });
+    queuedSend({ subject: memo.parent, predicate: Context.Knowledge.child, object: iri });
+  }
+
+  if (memo.previous) {
+    queuedSend({ subject: iri, predicate: Context.Knowledge.previous, object: memo.previous });
+    queuedSend({ subject: memo.previous, predicate: Context.Knowledge.next, object: iri });
+  }
+
+  thing.title && queuedSend({ subject: iri, predicate: Context.name, object: thing.title });
+  thing.description && queuedSend({ subject: iri, predicate: Context.description, object: thing.description });
+
+  switch (thing.kind) {
+    case 'Topic':
+      return doTopic(memo, thing);
+    case 'Video':
+      return doVideo(memo, thing);
+  }
+
+  return memo;
+}
+
+const irify = uri => `<${uri}>`;
+
+function doTopic(memo, topic) {
+  const iri = irify(topic.ka_url);
+
+  topic.children.reduce(doThing, Object.assign({}, memo, {
+    parent: iri,
+    previous: ''
+  }));
+
+  return Object.assign({}, memo, {
+    previous: iri,
+  });
+}
+
+function doVideo(memo, video) {
+  const iri = irify(video.ka_url);
+  const videoIri = irify('https://www.youtube.com/watch?v=' + video.youtube_id);
+
+  queuedSend({ subject: iri, predicate: Context.Knowledge.resource, object: videoIri });
+  queuedSend({ subject: videoIri, predicate: Context.Knowledge.topic, object: iri });
+
+  queuedSend({ subject: videoIri, predicate: Context.type, object: Context.VideoObject });
+  queuedSend({ subject: videoIri, predicate: Context.type, object: Context.Knowledge.Resource });
+  video.title && queuedSend({ subject: videoIri, predicate: Context.name, object: video.title });
+  video.description && queuedSend({ subject: videoIri, predicate: Context.description, object: video.description });
+  video.image_url && queuedSend({ subject: videoIri, predicate: Context.image, object: irify(video.image_url) });
+  video.license_url && queuedSend({ subject: videoIri, predicate: Context.license, object: irify(video.license_url) });
+
+  return memo;
+}
+
+doThing({}, topictree);
