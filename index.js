@@ -21,7 +21,7 @@ const { send } = memux({
 });
 
 const queue = new PQueue({
-  concurrency: 16
+  concurrency: 100
 });
 
 const topictree = require('./topictree.json');
@@ -35,6 +35,7 @@ const Context = {
   url: '<http://schema.org/url>',
   sameAs: '<http://schema.org/sameAs>',
   license: '<http://schema.org/license>',
+  sourceOrganization: '<http://schema.org/sourceOrganization>',
   author: '<http://schema.org/author>',
   about: '<http://schema.org/about>',
   citation: '<http://schema.org/citation>',
@@ -141,6 +142,7 @@ function doVideo(memo, video) {
   video.description && queuedSend({ subject: videoIri, predicate: Context.description, object: video.description });
   video.image_url && queuedSend({ subject: videoIri, predicate: Context.image, object: irify(video.image_url) });
   video.license_url && queuedSend({ subject: videoIri, predicate: Context.license, object: irify(video.license_url) });
+  queuedSend({ subject: videoIri, predicate: Context.sourceOrganization, object: 'KhanAcademy' });
 
   return memo;
 }
