@@ -1,0 +1,2 @@
+declare const CONCURRENCY: number;
+export { NAME, KAFKA_ADDRESS, OUTPUT_TOPIC, CONCURRENCY };
