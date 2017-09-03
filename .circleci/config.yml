@@ -22,7 +22,6 @@ jobs:
       - restore_cache:
           keys:
           - node_modules-{{ checksum "package.json" }}-{{ checksum "package-lock.json" }}
-          - node_modules-
 
       - run:
           name: Install dependencies
@@ -59,14 +58,14 @@ jobs:
 
             mkdir -p ~/.ssh
             ssh-keyscan -H heroku.com >> ~/.ssh/known_hosts
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              heroku config:add GIT_TAG=`git describe --tags --always` --app staging-fbf-knowledge-khan-min
-              git push git@heroku.com:staging-fbf-knowledge-khan-min.git $CIRCLE_SHA1:refs/heads/master -f
-              heroku ps:scale web=0 -a staging-fbf-knowledge-khan-min
-              heroku run:detached npm start -a staging-fbf-knowledge-khan-min
-            elif [[ $CIRCLE_TAG =~ ^v[0-9]+\.[0-9]+ ]]; then
+            if git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$"; then
               heroku config:add GIT_TAG=`git describe --tags --always` --app fbf-knowledge-khan-miner
               git push git@heroku.com:fbf-knowledge-khan-miner.git $CIRCLE_SHA1:refs/heads/master -f
               heroku ps:scale web=0 -a fbf-knowledge-khan-miner
               heroku run:detached npm start -a fbf-knowledge-khan-miner
+            elif [ "${CIRCLE_BRANCH}" == "master" ]; then
+              heroku config:add GIT_TAG=`git describe --tags --always` --app staging-fbf-knowledge-khan-min
+              git push git@heroku.com:staging-fbf-knowledge-khan-min.git $CIRCLE_SHA1:refs/heads/master -f
+              heroku ps:scale web=0 -a staging-fbf-knowledge-khan-min
+              heroku run:detached npm start -a staging-fbf-knowledge-khan-min
             fi
