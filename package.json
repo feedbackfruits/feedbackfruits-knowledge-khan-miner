@@ -41,10 +41,9 @@
     "@reactivex/rxjs": "^5.4.3",
     "@types/node": "^8.0.24",
     "dotenv": "^4.0.0",
-    "feedbackfruits-knowledge-context": "feedbackfruits/feedbackfruits-knowledge-context",
-    "feedbackfruits-knowledge-engine": "github:feedbackfruits/feedbackfruits-knowledge-engine#semver:^1.1.0",
+    "feedbackfruits-knowledge-engine": "github:feedbackfruits/feedbackfruits-knowledge-engine#~1.2.0",
+    "memux": "github:knowledge-express/memux#~0.4.2",
     "jsonld": "^0.4.11",
-    "memux": "github:knowledge-express/memux#semver:~0.4.0",
     "node-fetch": "^1.6.3",
     "p-queue": "^1.0.0",
     "typescript": "^2.4.2"

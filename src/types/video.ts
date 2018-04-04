@@ -1,21 +1,30 @@
-import { Quad, Doc, Helpers } from 'feedbackfruits-knowledge-engine';
-import * as Context from 'feedbackfruits-knowledge-context';
+import { Quad, Doc, Helpers, Context } from 'feedbackfruits-knowledge-engine';
 
-export function videoToDocs(video): Doc[] {
-  const iri = Helpers.iriify(video.ka_url);
-  const videoIri = Helpers.iriify('https://www.youtube.com/watch?v=' + video.youtube_id);
-  let quads: Quad[] = [];
+export function videoToDoc(video): Doc {
+  const id = video.ka_url;
+  const videoURL = 'https://www.youtube.com/watch?v=' + video.youtube_id;
 
-  quads.push({ subject: iri, predicate: Context.Knowledge.resource, object: videoIri });
-  quads.push({ subject: videoIri, predicate: Context.Knowledge.topic, object: iri });
+  return {
+    "@id": id,
+    "@type": [
+      Context.iris.$.Topic
+    ],
+    resource: {
+      "@id": videoURL,
+      "@type": [ Context.iris.schema.VideoObject, Context.iris.$.Resource ],
 
-  quads.push({ subject: videoIri, predicate: Context.type, object: Context.VideoObject });
-  quads.push({ subject: videoIri, predicate: Context.type, object: Context.Knowledge.Resource });
-  video.title && quads.push({ subject: videoIri, predicate: Context.name, object: video.title });
-  video.description && quads.push({ subject: videoIri, predicate: Context.description, object: video.description });
-  video.image_url && quads.push({ subject: videoIri, predicate: Context.image, object: Helpers.iriify(video.image_url) });
-  video.license_url && quads.push({ subject: videoIri, predicate: Context.license, object: Helpers.iriify(video.license_url) });
-  quads.push({ subject: videoIri, predicate: Context.sourceOrganization, object: 'KhanAcademy' });
-
-  return Helpers.quadsToDocs(quads);
+      name: video.title,
+      description: video.description,
+      image: video.image_url,
+      license: [
+        video.license_url
+      ],
+      topic: [
+        id
+      ],
+      sourceOrganization: [
+        "https://www.khanacademy.org/"
+      ]
+    }
+  };
 }

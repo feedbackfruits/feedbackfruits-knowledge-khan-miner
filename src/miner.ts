@@ -1,9 +1,7 @@
 import { Observable } from '@reactivex/rxjs';
-import * as Context from './context';
 import { Quad, Doc, Helpers } from 'feedbackfruits-knowledge-engine';
 
-import { topicToDocs } from './types/topic';
-import { videoToDocs } from './types/video';
+import * as Types from './types';
 
 const topictree = require('../topictree.json');
 
@@ -11,9 +9,9 @@ export function mine(): Observable<Doc> {
   const things = treeToObservable({}, topictree);
   return things.mergeMap(({ context, thing }) => {
     if (thing.kind === 'Video') {
-      return videoToDocs(thing);
+      return [ Types.videoToDoc(thing) ];
     } else if (thing.kind === 'Topic') {
-      return topicToDocs(context, thing);
+      return [ Types.topicToDoc(context, thing) ];
     }
   });
 }
@@ -26,15 +24,17 @@ export function treeToObservable(context, thing): Observable<{ context, thing }>
     } else if (thing.kind === 'Topic') {
       observer.next({ context, thing });
 
-      const iri = Helpers.iriify(thing.ka_url);
+      const id = thing.ka_url;
       const { observable } = thing.children.reduce((context, thing) => {
         const childObservable = treeToObservable(context, thing);
+        const childId = thing.ka_url;
         return {
           ...context,
+          previous: childId,
           observable: Observable.merge(context.observable, childObservable)
         };
       }, {
-        parent: iri,
+        parent: id,
         previous: '',
         observable: Observable.empty()
       });

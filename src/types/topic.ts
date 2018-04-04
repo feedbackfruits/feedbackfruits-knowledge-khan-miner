@@ -1,24 +1,20 @@
-import { Quad, Doc, Helpers } from 'feedbackfruits-knowledge-engine';
-import * as Context from 'feedbackfruits-knowledge-context';
+import { Quad, Doc, Helpers, Context } from 'feedbackfruits-knowledge-engine';
 
-export function topicToDocs(context, topic): Doc[] {
-  const iri = Helpers.iriify(topic.ka_url);
-  let quads: Quad[] = [];
+export function topicToDoc(context, topic): Doc {
+  const id = topic.ka_url;
 
-  quads.push({ subject: iri, predicate: Context.type, object: Context.Knowledge.Topic });
-
-  if (context.parent) {
-    quads.push({ subject: iri, predicate: Context.Knowledge.parent, object: context.parent });
-    quads.push({ subject: context.parent, predicate: Context.Knowledge.child, object: iri });
+  return {
+    "@id": id,
+    "@type": [ Context.iris.$.Topic ],
+    name: topic.title,
+    description: topic.description,
+    ...(context.parent ? { parent: {
+      "@id": context.parent,
+      child: [ id ]
+    } } : {}),
+    ...(context.previous ? { previous: {
+      "@id": context.previous,
+      next: [ id ]
+    } } : {})
   }
-
-  if (context.previous) {
-    quads.push({ subject: iri, predicate: Context.Knowledge.previous, object: context.previous });
-    quads.push({ subject: context.previous, predicate: Context.Knowledge.next, object: iri });
-  }
-
-  topic.title && quads.push({ subject: iri, predicate: Context.name, object: topic.title });
-  topic.description && quads.push({ subject: iri, predicate: Context.description, object: topic.description });
-
-  return Helpers.quadsToDocs(quads);
 }
