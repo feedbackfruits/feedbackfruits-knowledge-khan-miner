@@ -1820,9 +1820,9 @@ feedbackfruits-knowledge-context@feedbackfruits/feedbackfruits-knowledge-context
     tslint "^5.5.0"
     typescript "^2.4.1"
 
-feedbackfruits-knowledge-engine@feedbackfruits/feedbackfruits-knowledge-engine#feature/ontology:
-  version "1.1.0"
-  resolved "https://codeload.github.com/feedbackfruits/feedbackfruits-knowledge-engine/tar.gz/4529914f8bfbde01a91d7be24dcd1b10fd019aa6"
+"feedbackfruits-knowledge-engine@github:feedbackfruits/feedbackfruits-knowledge-engine#~1.2.0":
+  version "1.2.0"
+  resolved "https://codeload.github.com/feedbackfruits/feedbackfruits-knowledge-engine/tar.gz/231ca6b98a9ceeda6090ca3d338e65dfac3c78a9"
   dependencies:
     "@types/n3" "^0.0.3"
     "@types/node" "^8.0.14"
@@ -3102,7 +3102,7 @@ memux@^0.4.2:
     p-queue "^1.1.0"
     typescript "^2.4.1"
 
-"memux@github:knowledge-express/memux#~0.4.1":
+"memux@github:knowledge-express/memux#~0.4.2":
   version "0.4.2"
   resolved "https://codeload.github.com/knowledge-express/memux/tar.gz/0fb2c86a18db5d2374d0a91d8f1264348772d0f4"
   dependencies:
